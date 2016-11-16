@@ -11,6 +11,8 @@ import Curry
 import Argo
 import Runes
 
+//old version of model with mapping using Argo framework
+
 //struct Person {
 //    let name: String
 //    let photo: String?

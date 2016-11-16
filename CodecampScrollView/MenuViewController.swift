@@ -10,6 +10,7 @@ import UIKit
 
 private let cellId = "cellId"
 
+//nothing to see here
 class MenuViewController: UITableViewController {
 
     override func viewDidLoad() {

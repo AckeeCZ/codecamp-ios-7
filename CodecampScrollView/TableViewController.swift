@@ -52,6 +52,7 @@ private let cellId = "cellId"
 //    }
 //}
 
+//read the docs
 extension TableViewController: UITableViewDelegate {
 //    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
 //        <#code#>
@@ -187,6 +188,7 @@ extension TableViewController: UITableViewDelegate {
 //    //No tableViewDidReload, use dispatch_async
 }
 
+//this just shows that UITableViewDelegate inherits from UIScrollViewDelegate, so redeclaring conformance to UIScrollViewDelegate here would be redundant
 extension TableViewController/*: UIScrollViewDelegate*/ {
     // scroll
 //    func scrollViewDidScroll(scrollView: UIScrollView) {
@@ -214,8 +216,10 @@ extension TableViewController/*: UIScrollViewDelegate*/ {
 //    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView?, atScale scale: CGFloat) { }
 }
 
+//example tableView with dynamic data source
 class TableViewController: UIViewController {
 
+    //the model data, we use MVVM at ackee so we would pull this out into the ViewModel, but our example uses MVM so this pattern with reload on didSet is ok. Always make sure that you tableView is up to date with you model.
     var people: [Person] = [] {
         didSet {
             tableView.reloadData()
@@ -232,10 +236,10 @@ class TableViewController: UIViewController {
 
     weak var tableView: UITableView! {
         didSet {
-            tableView.dataSource = self
-            tableView.delegate = self
+            tableView.dataSource = self //set datasource to provide data (numberOfRows, cells) for the tableView
+            tableView.delegate = self //set delegate for additional customization, see docs for each delegate method
             tableView.register(TableViewCell.self, forCellReuseIdentifier: cellId)
-            tableView.rowHeight = UITableViewAutomaticDimension
+            tableView.rowHeight = UITableViewAutomaticDimension //set Automatic here and set some estimatedRowHeight to enabled self-sizing cells. If you run into trouble, google "ios tableview self sizing cells"
             tableView.estimatedRowHeight = 100
             tableView.snp_makeConstraints { make in
                 make.edges.equalTo(view)
@@ -245,7 +249,7 @@ class TableViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        //this closure parses the received JSON and sets the result to self.people
         let reload: (AnyObject) -> () = { [weak self] json in
             //argo
 //            let models: Decoded<[Person]> = decode(json) //argo
@@ -255,7 +259,7 @@ class TableViewController: UIViewController {
 //            self?.people = models.value ?? []
             //marshal
             do {
-                let dummyKey = "dummyKey"
+                let dummyKey = "dummyKey" //as far as I know, Marshal doesnt yet support decoding a topLevel JSON array. This workaround works just fine. Expect future versions of Marshal to add this feature.
                 let models: [Person] = try [dummyKey: json].value(for: dummyKey)
                 self?.people = models
             }catch{
@@ -265,13 +269,13 @@ class TableViewController: UIViewController {
         }
 
         switch dataSource {
-        case .local:
+        case .local: //load the people.json bundled locally into the app. Parse it into a json dictionary and pass that to reload()
             if let jsonData = Bundle.main.path(forResource: "people", ofType: "json")
                 .flatMap({ (try? Data(contentsOf: URL(fileURLWithPath: $0))) }),
                 let json = try? JSONSerialization.jsonObject(with: jsonData, options: .allowFragments) {
                     reload(json as AnyObject)
             }
-        case .http(let baseUrl):
+        case .http(let baseUrl): //load the JSON from a web server. Alamofire is the most widely used networking library, see their github for advanced examples.
             Alamofire.request(baseUrl + "/people", method: .get)
                 .validate()
                 .responseJSON { response in
@@ -281,8 +285,8 @@ class TableViewController: UIViewController {
                     guard let json = response.result.value else { return }
                     reload(json as AnyObject)
             }
-        case .firebase:
-             FIRDatabase.database().reference().observe(.value) { (snapshot: FIRDataSnapshot!) in
+        case .firebase: //firebase is a remote json database great for building reactive apps. This example works for now, but is hooked up to my personal firebase account, so make your own if you want to experiment. Follow tutorial on adding a GoogleService-Info.plist at firebase.google.com
+            firebaseHandle = FIRDatabase.database().reference().observe(.value) { (snapshot: FIRDataSnapshot!) in
                 guard let json = snapshot.value else { return }
                 reload(json as AnyObject)
             }
@@ -297,16 +301,15 @@ class TableViewController: UIViewController {
         case firebase
     }
 
-//    var firebaseHandle: UInt? = nil
+    var firebaseHandle: UInt? = nil
     deinit {
-//        if case .firebase = dataSource,
-//            let handle = firebaseHandle {
-//                Firebase(url: path).removeObserver(withHandle: handle)
-//        }
+        if let handle = firebaseHandle { //make sure to always remove the observer when you are done. Here we are using the topLevel FIRDatabaseReference, but even if you were using one of its children and it got deallocated, it would continue to call the observer until you remove it!
+            FIRDatabase.database().reference().removeObserver(withHandle: handle)
+        }
     }
 }
 
-extension TableViewController: UITableViewDataSource {
+extension TableViewController: UITableViewDataSource { //provide data for the tableView
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return people.count
@@ -314,8 +317,10 @@ extension TableViewController: UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellId, for: indexPath) as! TableViewCell
-        let model = people[indexPath.row]
-        cell.thumbnailImageView.sd_setImage(with: model.photo.flatMap { URL(string: $0) }) // must set NSAllowsArbitraryLoads
+        let model = people[indexPath.row] //make sure your tableView is up to date with the model (dont go out of bounds here)
+        
+        //use sdwebimage to download an image asynchronously
+        cell.thumbnailImageView.sd_setImage(with: model.photo.flatMap { URL(string: $0) }) // must set NSAllowsArbitraryLoads in plist to download from arbitrary URL (google it)
         cell.titleLabel.text = model.name
         cell.subtitleLabel.text = model.addresses.map { $0.text }.reduce("") { $0 + ", " + $1 }
         return cell

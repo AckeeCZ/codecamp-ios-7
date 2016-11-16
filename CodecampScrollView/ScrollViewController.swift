@@ -59,10 +59,12 @@ import SnapKit
 //    }
 //}
 
+
+//scroll view example from codecamp6 (== biios 5?)
 class ScrollViewController: UIViewController {
 
     override func loadView() {
-        let view = UIView(); view.backgroundColor = .white; view.isOpaque = true; self.view = view
+        super.loadView() //call UIViewController.loadView() even though the docs say otherwise. Not calling super messes up some advanced transitions.
 
         let imageView = UIImageView()
         let titleLabel = UILabel()
@@ -82,7 +84,7 @@ class ScrollViewController: UIViewController {
 
     weak var imageView: UIImageView!
     weak var titleLabel: UILabel! {
-        didSet {
+        didSet { //styling views in didSets is an old convention that we no longer use. We now do this directly in loadView, but its a matter of personal preference.
             titleLabel.textAlignment = .center
         }
     }
@@ -109,7 +111,7 @@ class ScrollViewController: UIViewController {
             scrollView.snp_makeConstraints { make in
                 make.edges.equalTo(view)
             }
-//            scrollView.delegate = self
+            scrollView.delegate = self //set self as the delegate to receive delegate method calls. Must conform to UIScrollViewDelegate
         }
     }
 
@@ -121,6 +123,7 @@ class ScrollViewController: UIViewController {
     }
 }
 
+//read the docs on what each method does
 extension ScrollViewController: UIScrollViewDelegate {
     // scroll
     func scrollViewDidScroll(_ scrollView: UIScrollView) { }
@@ -129,9 +132,9 @@ extension ScrollViewController: UIScrollViewDelegate {
     func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) { }
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) { }
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) { }
-//    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) { // this one is the only interesting one :)
+    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) { // this one is the only interesting one :)
 //        targetContentOffset.memory = scrollView.center
-//    }
+    }
     func scrollViewDidScrollToTop(_ scrollView: UIScrollView) { }
     func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool { return true }
     // zoom

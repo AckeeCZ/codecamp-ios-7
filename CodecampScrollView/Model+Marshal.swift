@@ -8,6 +8,8 @@
 
 import Marshal
 
+//new version of model with mapping using Marshal framework
+
 struct Person {
     let name: String
     let photo: String?
@@ -39,7 +41,7 @@ extension Address: Unmarshaling {
         self.init(
             city: try object.value(for: "city"),
             street: try object.value(for: "street"),
-            type: .residential//try object.value(for: "type")
+            type: .residential//try object.value(for: "type") //this didnt work for some reason, inspect the error and try to fix it as homework
         )
     }
 }

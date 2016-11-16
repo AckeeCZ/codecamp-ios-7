@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 
 extension UIColor {
+    //this isnt up to date with swift3 guidelines
     class func gayColor() -> UIColor {
         return UIColor(red: CGFloat(0xFF) / 255, green: CGFloat(0x14) / 255, blue: CGFloat(0x93) / 255, alpha: 1.0)
     }

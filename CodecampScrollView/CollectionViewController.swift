@@ -10,6 +10,8 @@ import UIKit
 
 private let cellId = "cellId"
 
+//example collection, it doesnt work because of a layout problem. Read the logs and fix the problem as homework ;) We can help if someone needs it in their project.
+
 //its ok to use UICollectionViewController if the collectionView will always be fullscreen. Unlike UITableViewController, the collectionView isnt the root view.
 class CollectionViewController: UIViewController {
     override func loadView() {
